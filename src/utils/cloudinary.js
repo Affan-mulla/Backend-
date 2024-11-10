@@ -1,7 +1,7 @@
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
 
-(async function (localFilePath) {
+const uploadOnCloudinary = (async function (localFilePath) {
   // Configuration
   cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -29,3 +29,5 @@ import fs from "fs";
     fs.unlinkSync(localFilePath); //remove the locally saved temp file as the upload operation failed
   }
 })();
+
+export { uploadOnCloudinary }

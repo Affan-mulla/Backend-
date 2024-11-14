@@ -165,9 +165,9 @@ const logOutUser = asyncHandler(async (res, req) => {
   await User.findByIdAndUpdate(
     req.user._id,
     {
-      $set: {
-        refreshToken: undefined,
-      },
+      $unset:{
+        refreshToken: 1,
+      }
     },
     {
       new: true,
@@ -183,7 +183,7 @@ const logOutUser = asyncHandler(async (res, req) => {
     .status(200)
     .clearCookie("accessToken", options)
     .clearCookie("refreshToken", options)
-    .json(200, {}, "user logged Out");
+    .json(new ApiResponse(200, {}, "user logged Out"));
 });
 
 const refreshAccessToken = asyncHandler(async (res, req) => {
@@ -250,7 +250,7 @@ const changeCurrentPassword = asyncHandler(async (res, req) => {
 const getCurrentUser = asyncHandler(async (res, req) => {
   return res
     .status(200)
-    .json(200, req.user, "Current user fetched successfully.");
+    .json(new ApiResponse(200, req.user, "Current user fetched successfully."));
 });
 
 const updateAccountDetails = asyncHandler(async (res, req) => {
@@ -260,6 +260,8 @@ const updateAccountDetails = asyncHandler(async (res, req) => {
     throw new ApiError(400, "All fields Are required.");
   }
 
+  console.log(req.user);
+  
   const user = User.findByIdAndUpdate(
     req.user?._id,
     {
@@ -273,7 +275,7 @@ const updateAccountDetails = asyncHandler(async (res, req) => {
 
   return res
     .status(200)
-    .json(200, user, "Account Details Updated Successfully.");
+    .json(new ApiResponse(200, user._id, "Account Details Updated Successfully."));
 });
 
 const updateUserAvatar = asyncHandler(async (res, req) => {
@@ -283,7 +285,9 @@ const updateUserAvatar = asyncHandler(async (res, req) => {
     throw new ApiError(400, "Avatar file is missing.");
   }
 
-  const avatar = uploadOnCloudinary(avatarLocalPath);
+  const avatar = await uploadOnCloudinary(avatarLocalPath);
+  console.log(avatar);
+  
 
   if (!avatar.url) {
     throw new ApiError(400, "Error while uploading a file.");
@@ -309,7 +313,7 @@ const updateUserCoverImage = asyncHandler(async (res, req) => {
     throw new ApiError(400, "Avatar file is missing.");
   }
 
-  const coverImage = uploadOnCloudinary(coverImageLocalPath);
+  const coverImage = await uploadOnCloudinary(coverImageLocalPath);
 
   if (!coverImage.url) {
     throw new ApiError(400, "coverImage file is missing.");

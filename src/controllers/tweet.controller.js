@@ -1,0 +1,70 @@
+import mongoose, { isValidObjectId } from "mongoose"
+import {Tweet} from "../models/tweet.model.js"
+import {User} from "../models/user.model.js"
+import {ApiError} from "../utils/ApiError.js"
+import {ApiResponse} from "../utils/ApiResponse.js"
+import {asyncHandler} from "../utils/asyncHandler.js"
+
+const createTweet = asyncHandler(async ( res,req) => {
+    //TODO: create tweet
+    const {content } = req.body
+    if(!content) {
+        throw new ApiError(200, "tweet content is required")
+    }
+
+    const tweet = await Tweet.create({
+        content,
+    })
+
+    return res
+    .status(200)
+    .json(new ApiResponse(200, tweet, "tweet created successfully"))
+})
+
+const getUserTweets = asyncHandler(async ( res,req) => {
+    // TODO: get user tweets
+    const {username} = req.params
+
+    const tweet = await Tweet.aggregate([
+        {
+            $match: {
+                username : username?.toLowerCase()
+            }
+        },
+    ])
+})
+
+const updateTweet = asyncHandler(async( res,req) => {
+    //TODO: update tweet
+    const {content} = req.body
+    const {tweetId} = req.params
+
+    const tweet = await Tweet.findByIdAndUpdate(tweetId,
+        {
+            content
+        },
+        {new:true}
+    )
+
+    return res
+    .status(200)
+    .json(new ApiResponse(200, tweet, "tweet updated successfully"))
+})
+
+const deleteTweet = asyncHandler(async( res,req)=> {
+    //TODO: delete tweet
+    const {tweetId} = req.params
+
+    const tweet = await Tweet.findByIdAndDelete(tweetId)
+
+    return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "tweet deleted successfully"))
+})
+
+export {
+    createTweet,
+    getUserTweets,
+    updateTweet,
+    deleteTweet
+}

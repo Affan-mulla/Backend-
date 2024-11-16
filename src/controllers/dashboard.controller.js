@@ -12,11 +12,10 @@ const getChannelStats = asyncHandler(async (res, req) => {
 
 const getChannelVideos = asyncHandler(async (res, req) => {
     // TODO: Get all the videos uploaded by the channel
-    const user = req.body
     const channelVideos = await Video.aggregate([
         {
-            $match:{
-                _id : user._id
+            $match : {
+                owner : req.user._id
             }
         }
     ])

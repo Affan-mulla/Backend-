@@ -4,20 +4,15 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
-const demo = () => {
-  console.log("dslkjgh");
-};
-
 const createPlaylist = asyncHandler(async (res, req) => {
   const { name, description } = req.body;
-
+  const { userId } = req.params;
   //TODO: create playlist
   const playlist = await Playlist.create({
     name,
     description,
+    owner: userId,
   });
-
-  console.log(playlist);
 
   return res.status(200).json(200, playlist, "Playlist created successfully.");
 });
@@ -28,7 +23,7 @@ const getUserPlaylists = asyncHandler(async (res, req) => {
   const playlist = await Playlist.aggregate([
     {
       $match: {
-        owner: userId,
+        owner: new mongoose.Types.ObjectId(userId),
       },
     },
   ]);
@@ -59,10 +54,18 @@ const getPlaylistById = asyncHandler(async (res, req) => {
 
 const addVideoToPlaylist = asyncHandler(async (res, req) => {
   const { playlistId, videoId } = req.params;
-  const { videos: videoArray } = await Playlist.findById(playlistId);
-  const playlist = await Playlist.findByIdAndUpdate(playlistId, {
-    videos: videoArray.length > 0 ? [...videoArray, videoId] : videoId,
-  });
+  const videoArray = await Playlist.findById(playlistId);
+
+  const playlist = await Playlist.findByIdAndUpdate(
+    playlistId,
+    {
+      videos:
+        videoArray?.videos.length < 0 && videoArray.videos !== null
+          ? [...videoArray.videos, videoId]
+          : [videoId],
+    },
+    { new: true }
+  );
 
   return res
     .status(200)
@@ -72,6 +75,26 @@ const addVideoToPlaylist = asyncHandler(async (res, req) => {
 const removeVideoFromPlaylist = asyncHandler(async (res, req) => {
   const { playlistId, videoId } = req.params;
   // TODO: remove video from playlist
+
+  const getPlaylist = await Playlist.findById(playlistId);
+  console.log(getPlaylist);
+
+
+  const playlist = await Playlist.findByIdAndUpdate(
+    playlistId,
+    {
+      $set: {
+        videos: getPlaylist.videos.filter((row) => {
+          row !== new mongoose.Types.ObjectId(videoId);
+        }),
+      },
+    },
+    { new: true }
+  );
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, playlist, "video deleted from playlist"));
 });
 
 const deletePlaylist = asyncHandler(async (res, req) => {
@@ -119,5 +142,4 @@ export {
   removeVideoFromPlaylist,
   deletePlaylist,
   updatePlaylist,
-  demo
 };
